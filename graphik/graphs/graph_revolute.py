@@ -347,7 +347,7 @@ class ProblemGraphRevolute(ProblemGraph):
                     self[e1][e2][DIST] = abs(D_max[idx, jdx] - D_min[idx, jdx])
 
 def random_revolute_robot_graph(
-    n: int, a_range=(-0.5, 0.5), d_range=(0, 0.5)
+    n: int, a_range=(0.1, 0.5), d_range=(0, 0.5)
 ) -> ProblemGraphRevolute:
 
     params = {
@@ -360,13 +360,17 @@ def random_revolute_robot_graph(
     }
 
     # we fix the first joint for simplicity
-    params["alpha"] += [-np.pi/2 + np.pi * np.random.randint(2)]
-    params["a"] += [0]
-    params["d"] += [(d_range[0] + (d_range[1] - d_range[0]) * np.random.rand()) * np.random.randint(2)]
+    params["alpha"] += [(-np.pi/2 + np.pi * np.random.randint(2)) * (np.random.randint(4) > 0)]
+    if params["alpha"][-1] == 0:
+        params["a"] += [a_range[0] + (a_range[1] - a_range[0]) * np.random.rand()]
+        params["d"] += [0]
+    else:
+        params["a"] += [0]
+        params["d"] += [(d_range[0] + (d_range[1] - d_range[0]) * np.random.rand()) * np.random.randint(2)]
     # params["theta"] += [(np.pi) * np.random.randint(2)]
     params["theta"] += [0]
 
-    for _ in range(n-2):
+    for _ in range(n-1):
         params["theta"] += [0]
         # if (len(params["alpha"]) > 1) and ((params["alpha"][-1] != 0) and (params["alpha"][-2] != 0)):
         #     params["alpha"] += [0]
@@ -382,17 +386,12 @@ def random_revolute_robot_graph(
             params["alpha"] += [(-np.pi/2 + np.pi * np.random.randint(2)) * (np.random.randint(4) > 0)]
 
         if params["alpha"][-1] != 0:
-            params["a"] += [0]
+            params["a"] += [(a_range[0] + (a_range[1] - a_range[0]) * np.random.rand()) * (np.random.randint(2))]
             params["d"] += [(d_range[0] + (d_range[1] - d_range[0]) * np.random.rand()) * (np.random.randint(2))]
         else:
             params["a"] += [a_range[0] + (a_range[1] - a_range[0]) * np.random.rand()]
             params["d"] += [0]
             params["alpha"][-1] += np.pi * np.random.randint(2) # alpha can also be -pi instead of 0
-
-    params["alpha"] += [0]
-    params["a"] += [0]
-    params["d"] += [(d_range[0] + (d_range[1] - d_range[0]) * np.random.rand()) * np.random.randint(2)]
-    params["theta"] += [0]
 
     robot = RobotRevolute(params)
     graph = ProblemGraphRevolute(robot)
